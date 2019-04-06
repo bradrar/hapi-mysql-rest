@@ -83,7 +83,7 @@ const init = async () => {
                     if(err) throw err;
                   
                     let solution = rows
-                    console.log(rows)
+                 
                     let views = () => {
                         return h.view('index', {
                             title: `this is title`,
@@ -117,6 +117,10 @@ const init = async () => {
         }
     });
 
+   
+    
+
+    //add employee
     server.route({
         method: 'POST',
         path: '/employee',
@@ -141,7 +145,36 @@ const init = async () => {
             })
         }
     });
-    
+
+
+     //delete employee
+     server.route({
+        method: 'POST',
+        path: '/{index}',
+        handler: (request, h) => {
+            return new Promise ((resolve, reject) => {
+
+                console.log(request.params)
+
+                let index = Number(request.params.index)
+                connection.query(
+                    'DELETE FROM employees WHERE id = ?', [index], (err, result) => {
+                      if (err) throw err;
+                
+                      console.log(`Deleted ${result.affectedRows} row(s)`);
+
+                      let redirect=  () => {
+                        return h.redirect().location('/')
+                    }
+                    console.log('successful')
+                    return resolve(redirect());
+                    }
+                  );
+      
+           
+            })
+        }
+    });
   
     
     await server.register(require('vision'));

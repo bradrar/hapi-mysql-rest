@@ -1,5 +1,13 @@
 const React = require('react');
 
+const deleteStyle = {
+    display: 'inline'
+}
+
+const pStyle = {
+    fontSize: '15px',
+    textAlign: 'center'
+  };
 
 module.exports = class IndexPage extends React.PureComponent {
 
@@ -11,9 +19,12 @@ module.exports = class IndexPage extends React.PureComponent {
                 <p>{this.props.message}</p>
                 
                 <ul>
-                    {this.props.solution.map(item => (
-                        <li key={item.name}>
-                        {item.name} 
+                    {this.props.solution.map((item, index) => (
+                        <li key={index}>
+                        {item.name} , {item.id}  
+                    <form style={{display: 'inline'}} action={`/${item.id}`} method="post"> 
+                        <button> X </button>
+                        </form>
                         </li>
                     ))}
                 </ul>
