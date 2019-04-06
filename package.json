@@ -1,0 +1,26 @@
+{
+  "name": "mysql-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-react-app": "^3.1.2",
+    "handlebars": "^4.1.1",
+    "hapi": "^18.1.0",
+    "hapi-react-views": "^10.0.0",
+    "hapijs-react-views": "^0.8.0",
+    "inert": "^5.1.3",
+    "mysql": "^2.16.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "vision": "^5.4.4"
+  }
+}
