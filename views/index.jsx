@@ -21,7 +21,7 @@ module.exports = class IndexPage extends React.PureComponent {
                 <ul>
                     {this.props.solution.map((item, index) => (
                         <li key={index}>
-                        {item.name} , {item.id}  
+                        {item.firstName} , {item.lastName} , {item.address} , {item.mobileNumber} , {item.id} <a href={`/update/${item.id}`}> Edit </a> 
                     <form style={{display: 'inline'}} action={`/${item.id}`} method="post"> 
                         <button> X </button>
                         </form>
@@ -30,8 +30,10 @@ module.exports = class IndexPage extends React.PureComponent {
                 </ul>
 
                 <form action="/employee" method="post">
-                    <input type="text" name="name"  placeholder="name"/>
-                    <input type="text" name="location"  placeholder="location"/>
+                    <input type="text" name="firstName"  placeholder="first name"/>
+                    <input type="text" name="lastName"  placeholder="last name"/>
+                    <input type="text" name="address"  placeholder="address"/>
+                    <input type="text" name="mobileNumber"  placeholder="mobile number"/>
 
                     <button>Submit</button>
                 </form>

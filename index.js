@@ -41,24 +41,7 @@ const server=Hapi.server({
 connection.connect();
 
 
-// connection.query(
-//     'UPDATE employees SET location = ? Where ID = ?',
-//     ['South Africa', 5],
-//     (err, result) => {
-//       if (err) throw err;
-  
-//       console.log(`Changed ${result.changedRows} row(s)`);
-//     }
-//   );
 
-
-// connection.query(
-//     'DELETE FROM employees WHERE id = ?', [5], (err, result) => {
-//       if (err) throw err;
-  
-//       console.log(`Deleted ${result.affectedRows} row(s)`);
-//     }
-//   );
 
 
 
@@ -79,7 +62,7 @@ const init = async () => {
 
             return new Promise ((resolve, reject) => {
 
-                connection.query('SELECT * FROM employees', (err,rows) => {
+                connection.query('SELECT * FROM phonebook', (err,rows) => {
                     if(err) throw err;
                   
                     let solution = rows
@@ -127,11 +110,13 @@ const init = async () => {
         handler: (request, h) => {
             return new Promise ((resolve, reject) => {
 
-                let name = request.payload.name;
-                let location = request.payload.location;
+                let firstName = request.payload.firstName;
+                let lastName = request.payload.lastName;
+                let address = request.payload.address;
+                let mobileNumber = request.payload.mobileNumber;
 
-                const employee = { name: name, location: location };
-                connection.query('INSERT INTO employees SET ?', employee, (err, res) => {
+                const employee = { firstName: firstName, lastName: lastName, address: address, mobileNumber: mobileNumber };
+                connection.query('INSERT INTO phonebook SET ?', employee, (err, res) => {
                 if(err) throw err;
 
                 let redirect=  () => {
@@ -146,6 +131,69 @@ const init = async () => {
         }
     });
 
+      //new update get employee
+      server.route({
+        method: 'get',
+        path: '/update/{index}',
+        handler: (request, h) => {
+            return new Promise ((resolve, reject) => {
+
+              
+
+                let index = Number(request.params.index)
+                connection.query(` SELECT * FROM phonebook WHERE id = ${index} limit 1` , (err, result)=> {
+                   
+                    let views = () => {
+                        return h.view('update', {
+                            employee: result[0]
+                        });
+                    }
+    
+                    return resolve(views());
+                })
+ 
+            })
+        }
+    });
+
+
+          //Action update get employee
+          server.route({
+            method: 'POST',
+            path: '/employeeUpdated',
+            handler: (request, h) => {
+                return new Promise ((resolve, reject) => {
+                   
+                    let firstName = request.payload.firstName;
+                    let lastName = request.payload.lastName;
+                    let address = request.payload.address;
+                    let mobileNumber = request.payload.mobileNumber;
+                    let index= Number(request.payload.index);
+                    console.log(request.payload)
+                    connection.query(
+                        'UPDATE phonebook SET firstName = ?, lastName = ?, address = ?, mobileNumber = ? Where ID = ?',
+                        [firstName, lastName , address , mobileNumber, index],
+                        (err, result) => {
+                          if (err) throw err;
+                      
+                         
+                            console.log(result);
+                          let redirect=  () => {
+                            return h.redirect().location('/')
+                             }
+
+                   
+                            return resolve(redirect())
+                  
+
+                        }
+                      );
+                    
+    
+     
+                })
+            }
+        });
 
      //delete employee
      server.route({
@@ -154,11 +202,10 @@ const init = async () => {
         handler: (request, h) => {
             return new Promise ((resolve, reject) => {
 
-                console.log(request.params)
-
+            
                 let index = Number(request.params.index)
                 connection.query(
-                    'DELETE FROM employees WHERE id = ?', [index], (err, result) => {
+                    'DELETE FROM phonebook WHERE id = ?', [index], (err, result) => {
                       if (err) throw err;
                 
                       console.log(`Deleted ${result.affectedRows} row(s)`);
@@ -199,34 +246,3 @@ process.on('unhandledRejection', (err) => {
 
 init();
 // connection.end();
-
-
-
-
-
-// I am trying to connect hapi.js with mysql. But when defining a server.route. the `handler` is not returning a value.
-
-//         server.route({
-//         method:'GET',
-//         path:'/hello',
-//         handler:function(request,h) {
-    
-//             connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-//                 if (error) throw error;
-    
-//                 console.log('The solution is: ', results[0].solution);
-    
-//                 return ('The solution is: ', results[0].solution)
-//               });
-    
-//         }
-//     });
-
-// It is saying `Error: handler method did not return a value, a promise, or throw an error`.
-
-// In here, I am returning `('The solution is: ', results[0].solution)` But it is still not working.
-
-// The output in the console is `The solution is: 2` but in the browser, It is an error.
-
-
-// Please help. Thank you
