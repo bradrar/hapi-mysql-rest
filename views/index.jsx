@@ -1,4 +1,5 @@
 const React = require('react');
+const Layout = require('./layout.jsx');
 
 const deleteStyle = {
     display: 'inline'
@@ -14,30 +15,44 @@ module.exports = class IndexPage extends React.PureComponent {
     render() {
         
         return (
-            <div year={this.props.year}>
-                <h1>{this.props.title}</h1>
-                <p>{this.props.message}</p>
-                
-                <ul>
-                    {this.props.solution.map((item, index) => (
-                        <li key={index}>
-                        {item.firstName} , {item.lastName} , {item.address} , {item.mobileNumber} , {item.id} <a href={`/update/${item.id}`}> Edit </a> 
-                    <form style={{display: 'inline'}} action={`/${item.id}`} method="post"> 
-                        <button> X </button>
-                        </form>
-                        </li>
-                    ))}
-                </ul>
-
-                <form action="/employee" method="post">
-                    <input type="text" name="firstName"  placeholder="first name"/>
-                    <input type="text" name="lastName"  placeholder="last name"/>
-                    <input type="text" name="address"  placeholder="address"/>
-                    <input type="text" name="mobileNumber"  placeholder="mobile number"/>
-
-                    <button>Submit</button>
-                </form>
-            </div>
+            <Layout >
+                <div className='container'>
+                    
+                    <table className="table">
+                        <thead>
+                            <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">First Name</th>
+                            <th scope="col">Last Name</th>
+                            <th scope="col">Address</th>
+                            <th scope="col">Mobile Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {this.props.solution.map((item, index) => (
+                            <tr key={index}>
+                                <th scope="row"> {index + 1} </th>
+                                <td> {item.firstName} </td>
+                                <td> {item.lastName} </td>
+                                <td> {item.address}  </td>
+                                <td> 
+                                    {item.mobileNumber} 
+                                    <a href={`/update/${item.id}`}> Edit </a> 
+                                    <form style={{display: 'inline'}} action={`/${item.id}`} method="post"> 
+                                        <button className="btn btn-danger"> X </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                            <div className='container text-center'>
+                                <a className="btn btn-outline-primary" href="/add"> Add New Contact</a>
+                            </div>
+                       
+              
+                </div>
+            </Layout>
         );
     }
 };

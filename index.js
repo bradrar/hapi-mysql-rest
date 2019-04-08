@@ -5,16 +5,20 @@ const Path = require('path');
 const Inert = require('inert');
 var mysql      = require('mysql');
 const HapiReactViews = require('hapi-react-views');
+const Bcrypt = require('bcrypt');
 
 require('babel-core/register')({
     plugins: ['transform-react-jsx']
 });
 
-// Declare internals
-
-const internals = {
-    templatePath: '.'
-};
+const users = [
+    {
+        username: 'john',
+        password: '$2b$10$nrkw6Mco2j7YyBqZSWRAx.P3XEZsZg3MNfma2ECO8rGMUTcF9gHO.',   // 'secret'
+        name: 'John Doe',
+        id: '2133d32a'
+    }
+];
 
 
 var connection = mysql.createConnection({
@@ -54,6 +58,33 @@ const init = async () => {
     
     console.log(`Server running at: ${server.info.uri}`);
     await server.register(Inert);
+    await server.register(require('hapi-auth-cookie'));
+
+    //strategy
+    server.auth.strategy('session', 'cookie', {
+        cookie: {
+            name: 'sid-example',
+            password: '!wsYhFA*C2U6nz=Bu^%A@^F#SF3&kSR6',
+            isSecure: false
+        },
+        redirectTo: '/login',
+        validateFunc: async (request, session) => {
+
+            const account = await users.find(
+                (user) => (user.id === session.id)
+            );
+
+            if (!account) {
+
+                return { valid: false };
+            }
+
+            return { valid: true, credentials: account };
+        }
+    });
+
+
+
     // Home Route
     server.route({ 
         method: 'GET', 
@@ -98,6 +129,28 @@ const init = async () => {
                 index: true,
             }
         }
+    });
+
+     //new add route
+     server.route({
+        method: 'GET',
+        path: '/add',
+        handler: async (request, h) => {
+            
+            return new Promise ((resolve, reject) => {
+
+                let views = () => {
+                    return h.view('add');
+                }
+
+                return resolve(views());
+          
+
+            })
+  
+         
+        }
+
     });
 
    
@@ -222,7 +275,81 @@ const init = async () => {
             })
         }
     });
+
+
+    //restricted
+    server.route({
+        method: 'GET',
+        path: '/restricted',
+        handler: async (request, h) => {
+          
+            
+            return "this is restricted"
+        }
+    });
   
+
+    //login
+    server.route({
+        method: 'GET',
+        path: '/login',
+        handler: async (request, h) => {
+            
+            return new Promise ((resolve, reject) => {
+
+                let views = () => {
+                    return h.view('login');
+                }
+
+                return resolve(views());
+          
+
+            })
+  
+         
+        },
+        options: {
+            auth: false
+        }
+
+    });
+
+    // logout
+     server.route({
+        method: 'GET',
+        path: '/logout',
+        handler: async (request, h) => {
+            
+            request.cookieAuth.clear();
+            return h.redirect().location('/')
+         
+        }
+
+    });
+
+
+    //login post
+    server.route({
+            method: 'POST',
+            path: '/login',
+            handler: async (request, h) => {
+
+               console.log(request.payload)
+                const { username, password } = request.payload;
+                const account = users.find(
+                    (user) => user.username === username
+                );
+
+                if (!account || !(await Bcrypt.compare(password, users[0].password))) {
+                    console.log('user or password incorrect')
+                    return h.view('login');
+                }
+
+                request.cookieAuth.set({ id: users.id });
+                console.log('login successful')
+                return h.redirect().location("/")
+             }
+        })
     
     await server.register(require('vision'));
   
@@ -246,3 +373,4 @@ process.on('unhandledRejection', (err) => {
 
 init();
 // connection.end();
+
