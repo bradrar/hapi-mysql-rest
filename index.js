@@ -5,7 +5,9 @@ const Path = require('path');
 const Inert = require('inert');
 var mysql      = require('mysql');
 const HapiReactViews = require('hapi-react-views');
-const Bcrypt = require('bcrypt');
+
+var routes = require('./config/routes');
+var connection = require('./connection/database')
 
 require('babel-core/register')({
     plugins: ['transform-react-jsx']
@@ -21,13 +23,7 @@ const users = [
 ];
 
 
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : 'password',
-  database : "dbname",
-  insecureAuth : true
-});
+
 
 // Create a server with a host and port
 const server=Hapi.server({
@@ -43,13 +39,6 @@ const server=Hapi.server({
 
 
 connection.connect();
-
-
-
-
-
-
-
 
 
 
@@ -84,272 +73,46 @@ const init = async () => {
     });
 
 
+    server.auth.default({strategy: 'session', mode: 'try'});
 
     // Home Route
-    server.route({ 
-        method: 'GET', 
-        path: '/', 
-        handler: (request, h) => {
-
-            return new Promise ((resolve, reject) => {
-
-                connection.query('SELECT * FROM phonebook', (err,rows) => {
-                    if(err) throw err;
-                  
-                    let solution = rows
-                 
-                    let views = () => {
-                        return h.view('index', {
-                            title: `this is title`,
-                            message: 'Hello Jsx!',
-                            solution: solution
-                        });
-                    }
-
-                    return resolve(views());
-                   
-                  });
-              
-
-               
-            })
-          
-        
-        }
-    });
-
-
-    server.route({
-        method: 'GET',
-        path: '/{param*}',
-        handler: {
-            directory: {
-                path: '.',
-                redirectToSlash: true,
-                index: true,
-            }
-        }
-    });
-
-     //new add route
-     server.route({
-        method: 'GET',
-        path: '/add',
-        handler: async (request, h) => {
-            
-            return new Promise ((resolve, reject) => {
-
-                let views = () => {
-                    return h.view('add');
-                }
-
-                return resolve(views());
-          
-
-            })
-  
-         
-        }
-
-    });
-
-   
-    
-
-    //add employee
-    server.route({
-        method: 'POST',
-        path: '/employee',
-        handler: (request, h) => {
-            return new Promise ((resolve, reject) => {
-
-                let firstName = request.payload.firstName;
-                let lastName = request.payload.lastName;
-                let address = request.payload.address;
-                let mobileNumber = request.payload.mobileNumber;
-
-                const employee = { firstName: firstName, lastName: lastName, address: address, mobileNumber: mobileNumber };
-                connection.query('INSERT INTO phonebook SET ?', employee, (err, res) => {
-                if(err) throw err;
-
-                let redirect=  () => {
-                    return h.redirect().location('/')
-                }
-                console.log('successful')
-                return resolve(redirect())
-          
-                });
-           
-            })
-        }
-    });
-
-      //new update get employee
-      server.route({
-        method: 'get',
-        path: '/update/{index}',
-        handler: (request, h) => {
-            return new Promise ((resolve, reject) => {
-
-              
-
-                let index = Number(request.params.index)
-                connection.query(` SELECT * FROM phonebook WHERE id = ${index} limit 1` , (err, result)=> {
-                   
-                    let views = () => {
-                        return h.view('update', {
-                            employee: result[0]
-                        });
-                    }
-    
-                    return resolve(views());
-                })
- 
-            })
-        }
-    });
-
-
-          //Action update get employee
-          server.route({
-            method: 'POST',
-            path: '/employeeUpdated',
-            handler: (request, h) => {
-                return new Promise ((resolve, reject) => {
-                   
-                    let firstName = request.payload.firstName;
-                    let lastName = request.payload.lastName;
-                    let address = request.payload.address;
-                    let mobileNumber = request.payload.mobileNumber;
-                    let index= Number(request.payload.index);
-                    console.log(request.payload)
-                    connection.query(
-                        'UPDATE phonebook SET firstName = ?, lastName = ?, address = ?, mobileNumber = ? Where ID = ?',
-                        [firstName, lastName , address , mobileNumber, index],
-                        (err, result) => {
-                          if (err) throw err;
-                      
-                         
-                            console.log(result);
-                          let redirect=  () => {
-                            return h.redirect().location('/')
-                             }
-
-                   
-                            return resolve(redirect())
-                  
-
-                        }
-                      );
-                    
-    
-     
-                })
-            }
-        });
-
-     //delete employee
-     server.route({
-        method: 'POST',
-        path: '/{index}',
-        handler: (request, h) => {
-            return new Promise ((resolve, reject) => {
-
-            
-                let index = Number(request.params.index)
-                connection.query(
-                    'DELETE FROM phonebook WHERE id = ?', [index], (err, result) => {
-                      if (err) throw err;
-                
-                      console.log(`Deleted ${result.affectedRows} row(s)`);
-
-                      let redirect=  () => {
-                        return h.redirect().location('/')
-                    }
-                    console.log('successful')
-                    return resolve(redirect());
-                    }
-                  );
-      
-           
-            })
-        }
-    });
+    server.route(routes);
 
 
     //restricted
     server.route({
         method: 'GET',
         path: '/restricted',
-        handler: async (request, h) => {
+        options: {
+            auth: {
+                mode: 'required',
+                strategy: 'session'
+            }
+        },
+        handler: (request, h) => {
           
-            
-            return "this is restricted"
-        }
-    });
-  
-
-    //login
-    server.route({
-        method: 'GET',
-        path: '/login',
-        handler: async (request, h) => {
             
             return new Promise ((resolve, reject) => {
 
                 let views = () => {
-                    return h.view('login');
+                    return h.view('restricted');
                 }
 
                 return resolve(views());
           
 
-            })
+            });
   
-         
-        },
-        options: {
-            auth: false
         }
-
     });
-
-    // logout
-     server.route({
-        method: 'GET',
-        path: '/logout',
-        handler: async (request, h) => {
-            
-            request.cookieAuth.clear();
-            return h.redirect().location('/')
-         
-        }
-
-    });
+  
 
 
-    //login post
-    server.route({
-            method: 'POST',
-            path: '/login',
-            handler: async (request, h) => {
 
-               console.log(request.payload)
-                const { username, password } = request.payload;
-                const account = users.find(
-                    (user) => user.username === username
-                );
 
-                if (!account || !(await Bcrypt.compare(password, users[0].password))) {
-                    console.log('user or password incorrect')
-                    return h.view('login');
-                }
 
-                request.cookieAuth.set({ id: users.id });
-                console.log('login successful')
-                return h.redirect().location("/")
-             }
-        })
+
+
     
     await server.register(require('vision'));
   
@@ -360,6 +123,11 @@ const init = async () => {
         },
         relativeTo: __dirname,
         path: 'views'
+        // context: (request) => {
+        //     return {
+              
+        //     }
+        // } 
     });
 
     await server.start();

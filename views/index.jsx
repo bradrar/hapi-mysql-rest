@@ -18,6 +18,7 @@ module.exports = class IndexPage extends React.PureComponent {
             <Layout >
                 <div className='container'>
                     
+                    <h1>{this.props.user} </h1>
                     <table className="table">
                         <thead>
                             <tr>
